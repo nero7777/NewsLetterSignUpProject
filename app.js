@@ -1,0 +1,88 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const request = require('request');
+const https = require('https');
+const { STATUS_CODES } = require('http');
+
+const app = express();
+app.use(bodyParser.urlencoded({extended : true}));
+app.use(express.static("public"));
+
+app.get("/",function(req,res){
+    res.sendFile(__dirname + "/signup.html");
+})
+
+app.post("/",function(req,res){
+    const firstName = req.body.fName;
+    const lastName = req.body.lName;
+    const email = req.body.email;
+
+    const data = {
+        member: [
+            {
+                email_address: email,
+                status: "subscribed",
+                merge_fields:{
+                    FNAME: firstName,
+                    LNAME: lastName
+                }
+            }
+        ]
+    }
+    
+    const jsonData = JSON.stringify(data);
+
+    const url = "https://us17.api.mailchimp.com/3.0/lists/f282577d10";
+    const options = {
+        method: "POST",
+        auth: "samarth:3ec0994de87752d867f46b975ca737b2-us17"
+    }
+   const request =  https.request(url,options,function(response){
+   
+    if(response.status == 200){
+        res.sendFile(__dirname + "/success.html");
+    }else{
+        res.sendFile(__dirname + "/failure.html");
+    }
+
+    response.on("data",function(data){
+        console.log(JSON.parse(data));
+    })
+
+    })
+    request.write(jsonData);
+    request.end();
+
+})
+
+
+app.listen("3000",function(){
+    console.log("Server is Up and Running on Port 3000 !!");
+})
+
+app.post("/failure",function(req,res){
+    res.redirect("/");
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Audiance id
+//f282577d10
+
+
+//Mailchimp Api Key
+//3ec0994de87752d867f46b975ca737b2-us17
